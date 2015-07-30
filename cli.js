@@ -5,6 +5,6 @@
  * http://www.apache.org/licenses/LICENSE-2.0.html  
  */
 
-var DxBot = require('./dx-bot.min.js');
+var DxBot = require('./dx-bot.js');
 
-new DxBot();
+new DxBot(process.argv[2], process.argv[3]);
