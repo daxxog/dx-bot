@@ -21,6 +21,7 @@
   }
 }(this, function() {
     var JustBot = require('just-bot'),
+        S = require('string'),
         Big = require('big.js'),
         DxBot;
     
@@ -42,7 +43,6 @@
                 stop: 1,
                 shout: true,
                 stake: '0.1',
-                tip: '0.00000988',
                 bet: '0.00000001'
             },
             {
@@ -50,27 +50,23 @@
                 stop: 2,
                 shout: true,
                 stake: '1',
-                tip: '0.00000097',
                 bet: '0.00000001'
             },
             {
                 loss: 2,
                 stop: 10,
                 stake: '9',
-                tip: '0.00000009',
                 bet: '0.00000001'
             },
             {
                 loss: 10,
                 stop: 11,
                 stake: '98.0198',
-                tip: '0.00000001',
                 bet: '0.00002'
             },
             {
                 loss: 11,
                 reset: true,
-                jar: '0.00002',
                 stake: '98.0198',
                 bet: '0'
             }
@@ -103,23 +99,23 @@
         });
         
         this.bot.on('result', function(res) {
+            var profit = S(res.this_profit).replaceAll('+', '').s;
+            
+            that.jar = that.jar.plus(profit);
+            
             if(res.win === false) {
                 that.loss++;
             } else if(res.win === true) {
+                if(that.jar.gte(that.out)) {
+                    that.bot.msg(owner, 'sending tip jar :)');
+                    that.bot.tip(owner, that.jar);
+                    that.jar = new Big(0);
+                }
+                
                 that.bet.forEach(function(v) {
                     if(res.chance === v.stake) {
                         if(v.shout === true) {
                             that.bot.msg(owner, 'won #' + res.betid + ' at ' + res.chance + '%');
-                        }
-                        
-                        if(typeof v.tip === 'string') {
-                            that.jar = that.jar.plus(v.tip);
-                            
-                            if(that.jar.gte(that.out)) {
-                                that.bot.msg(owner, 'sending tip jar :)');
-                                that.bot.tip(owner, that.jar);
-                                that.jar = new Big(0);
-                            }
                         }
                     }
                 });
@@ -139,7 +135,6 @@
             this.bet.forEach(function(v) {
                 if(that.loss >= v.loss && v.reset === true) {
                     that.loss = 0;
-                    that.jar = that.jar.minus(v.jar); //subtract from jar to cover loss
                     that.bot.roll(v.stake, v.bet, Math.random() > 0.5);
                     didRoll = true;
                 }
