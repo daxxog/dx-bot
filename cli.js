@@ -7,4 +7,4 @@
 
 var DxBot = require('./dx-bot.min.js');
 
-new DxBot(process.argv[2], process.argv[3]);
+new DxBot(process.argv[2], process.argv[3], process.argv[4]);
