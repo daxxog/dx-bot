@@ -128,6 +128,7 @@
                       break;
                     case 'start':
                         that.run = true;
+                        that.streak = new Big(0);
                         that.roll();
                         that.bot.msg(owner, 'bot started');
                       break;
