@@ -24,7 +24,7 @@
         MongoClient = require('mongodb').MongoClient,
         S = require('string'),
         Big = require('big.js'),
-        DxBot;
+        DxBot, tenK = new Big('10000');
     
     Big.RM = 0; //round down
     Big.DP = 8; //eight decimal places as per bitcoin spec
@@ -57,7 +57,7 @@
             {
                 loss: 0,
                 stop: 1,
-                shout: true,
+                smart: true,
                 stake: '0.1',
                 bet: '0.00000001'
             },
@@ -85,6 +85,7 @@
                 loss: 11,
                 stop: 12,
                 streak: '0.00006',
+                smart: true,
                 bet: '0.00002',
                 stake: '49.5'
             }
@@ -143,7 +144,7 @@
         
         this.bot.on('result', function(res) {
             var profit = S(res.this_profit).replaceAll('+', '').s,
-                streaked = false;
+                streaked = false, smart = false;
             
             that.jar = that.jar.plus(profit);
             that.lucky = res.lucky;
@@ -166,14 +167,32 @@
                 });
             }
             
+            if(that.stats.length === 2) {
+                var select = 0;
+                
+                if(that.stats[0] > that.stats[1]) {
+                    select = that.strategy ? 0 : 1;
+                }
+                
+                if(that.stats[1] > that.stats[0]) {
+                    select = that.strategy ? 1 : 0;
+                }
+                
+                smart = JustBot._tidy(new Big(that.stats[select]).div(tenK).plus('0.1').round(1));
+            }
+            
             if(res.win === false) {
                 if(that.rng() > 900000) { //randomly change the bet strategy on loose
                     that.getStats();
                 }
                 
-                that.bet.forEach(function(v) {
+                that.bet.forEach(function(v, i) {
                     if(res.chance === v.stake) {
                         streaked = that.streaked(v, profit);
+                        
+                        if(v.smart === true && smart !== false) {
+                            that.bet[i].stake = smart;
+                        }
                         
                         if(v.shout === false) {
                             that.bot.msg(owner, 'lost #' + res.betid + ' at ' + res.chance + '%');
@@ -241,7 +260,7 @@
         if(streaked === true) {
             this.streak = this.streak.plus(profit);
             
-            if(this.streak.eq(v.streak)) {
+            if(this.streak.gte(v.streak)) {
                 streaked = false;
                 //console.log('streak killed at: ' + JustBot._tidy(this.streak));
                 this.streak = new Big(0);
