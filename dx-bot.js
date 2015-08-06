@@ -59,27 +59,27 @@
                 stop: 1,
                 shout: true,
                 stake: '1',
-                bet: '0.00000001'
+                bet: '0.0000001'
             },
             {
                 loss: 1,
                 stop: 2,
                 smart: true,
                 stake: '0.1',
-                bet: '0.00000001'
+                bet: '0.0000001'
             },
             {
                 loss: 2,
                 stop: 10,
                 stake: '9',
-                bet: '0.00000001'
+                bet: '0.0000001'
             },
             {
                 loss: 10,
                 stop: 11,
                 shout: false,
                 stake: '98.0198',
-                bet: '0.00002'
+                bet: '0.0002'
             },
             {
                 loss: 11,
