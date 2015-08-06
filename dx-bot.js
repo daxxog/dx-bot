@@ -84,9 +84,9 @@
             {
                 loss: 11,
                 stop: 12,
-                streak: '0.00006',
+                streak: '0.0006',
                 smart: true,
-                bet: '0.00002',
+                bet: '0.0002',
                 stake: '49.5'
             }
         ];
