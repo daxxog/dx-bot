@@ -57,15 +57,15 @@
             {
                 loss: 0,
                 stop: 1,
-                smart: true,
-                stake: '0.1',
+                shout: true,
+                stake: '1',
                 bet: '0.00000001'
             },
             {
                 loss: 1,
                 stop: 2,
-                shout: true,
-                stake: '1',
+                smart: true,
+                stake: '0.1',
                 bet: '0.00000001'
             },
             {
@@ -124,7 +124,7 @@
                       break;
                     case 'smart':
                         if(typeof that.smart !== 'undefined') {
-                            that.bot.msg(owner, 'smart stats: ' + JSON.stringify(that.stats));
+                            that.bot.msg(owner, 'smart stats: ' + JSON.stringify(that.stats) + '; weight: ' + JustBot._tidy(that.weight));
                         }
                       break;
                     case 'start':
@@ -160,7 +160,10 @@
                 
                 that.smart.insert({
                     lucky: res.lucky,
-                    win: res.win
+                    win: res.win,
+                    unlucky: res.lucky > 495000 && res.lucky < 504999,
+                    range: res.lucky > 495000 && !(res.lucky < 504999),
+                    high: res.high
                 }, function(err) {
                     if(err) {
                         console.error(err);
@@ -179,7 +182,13 @@
                     select = that.strategy ? 1 : 0;
                 }
                 
-                smart = JustBot._tidy(new Big(that.stats[select]).div(tenK).plus('0.1').round(1));
+                smart = new Big(that.stats[select]).div(tenK).plus('0.1').round(1);
+                
+                if(that.strategy) { //invert number on high
+                    smart = new Big(100).minus(smart);
+                }
+                
+                smart = JustBot._tidy(smart);
             }
             
             if(res.win === false) {
@@ -189,6 +198,7 @@
                 
                 that.bet.forEach(function(v, i) {
                     if(res.chance === v.stake) {
+                        
                         streaked = that.streaked(v, profit);
                         
                         if(v.smart === true && smart !== false) {
@@ -256,15 +266,16 @@
     };
     
     DxBot.prototype.streaked = function(v, profit) {
-        var streaked = (typeof v.streak === 'string');
+        var streaked = (typeof v.streak === 'string') && this.loss >= v.loss;
         
         if(streaked === true) {
             this.streak = this.streak.plus(profit);
             
             if(this.streak.gte(v.streak)) {
                 streaked = false;
-                //console.log('streak killed at: ' + JustBot._tidy(this.streak));
+                this.bot.msg(this.owner, 'cleared loosing streak with ' + JustBot._tidy(this.streak));
                 this.streak = new Big(0);
+                this.loss = 0;
             }
         }
         
@@ -284,14 +295,21 @@
         var that = this;
         
         if(typeof that.smart !== 'undefined') {
-            this.smart.aggregate([{
-                $group: {
-                    _id: "$win",
-                    avgLuck: {
-                        $avg: '$lucky'
+            this.smart.aggregate([
+                {
+                    $match: {
+                        unlucky: false,
+                    }
+                },
+                {
+                    $group: {
+                        _id: "$range",
+                        avgLuck: {
+                            $avg: '$lucky'
+                        }
                     }
                 }
-            }], function(err, docs) {
+            ], function(err, docs) {
                 if(!err) {
                     that.stats = docs.map(function(v, i, a) {
                         if(v._id === true) {
@@ -311,8 +329,8 @@
                     
                     
                     var weight = that.stats.map(function(v, i) {
-                        if(v > 550000) {
-                            return v - 550000;
+                        if(v > 504999) {
+                            return v - 504999;
                         } else if(v < 490000) {
                             return (490000 - v) * (-1);
                         } else {
@@ -320,9 +338,16 @@
                         }
                     }).reduce(function(p, c) {
                         return p + c;
-                    }, 0);
+                    }, 0), old = that.strategy;
                     
+                    that.weight = weight;
                     that.strategy = weight > 0; //find the best strategy
+                    
+                    if(that.strategy !== old) {
+                        that.bot.msg(that.owner, 'strategy changed to ' + (that.hilo() ? 'hi' : 'lo') + '; weight: ' + weight);
+                    }
+                } else {
+                    console.error(err);
                 }
             });
         }
