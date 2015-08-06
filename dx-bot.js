@@ -113,8 +113,8 @@
                     case 'hilo':
                         that.bot.msg(owner, that.hilo() ? 'hi' : 'lo');
                       break;
-                    case 'strategy':
-                        that.bot.msg(owner, that.strategy);
+                    case 'give':
+                        that.bot.tip(owner, that.bot.balance);
                       break;
                     case 'drop':
                         if(typeof that.smart !== 'undefined') {
@@ -138,7 +138,7 @@
                         that.bot.msg(owner, 'bot stopped');
                       break;
                     case 'help':
-                        that.bot.msg(owner, 'commands: jar, streak, balance, lucky, hilo, strategy, drop, smart, start, stop');
+                        that.bot.msg(owner, 'commands: jar, streak, balance, lucky, hilo, give, drop, smart, start, stop');
                 }
             }
         });
