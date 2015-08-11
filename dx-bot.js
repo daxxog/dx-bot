@@ -311,40 +311,42 @@
                 }
             ], function(err, docs) {
                 if(!err) {
-                    that.stats = docs.map(function(v, i, a) {
-                        if(v._id === true) {
-                            if(i === 1) {
-                                return v.avgLuck;
-                            } else if(i === 0) {
-                                return a[1].avgLuck;
+                    if(docs.length === 2) { //only if length === 2
+                        that.stats = docs.map(function(v, i, a) {
+                            if(v._id === true) {
+                                if(i === 1) {
+                                    return v.avgLuck;
+                                } else if(i === 0) {
+                                    return a[1].avgLuck;
+                                }
+                            } else if(v._id === false) {
+                                if(i === 0) {
+                                    return v.avgLuck;
+                                } else if(i === 1) {
+                                    return a[0].avgLuck;
+                                }
                             }
-                        } else if(v._id === false) {
-                            if(i === 0) {
-                                return v.avgLuck;
-                            } else if(i === 1) {
-                                return a[0].avgLuck;
+                        });
+                        
+                        
+                        var weight = that.stats.map(function(v, i) {
+                            if(v > 504999) {
+                                return v - 504999;
+                            } else if(v < 490000) {
+                                return (490000 - v) * (-1);
+                            } else {
+                                return 0;
                             }
+                        }).reduce(function(p, c) {
+                            return p + c;
+                        }, 0), old = that.strategy;
+                        
+                        that.weight = weight;
+                        that.strategy = weight > 0; //find the best strategy
+                        
+                        if(that.strategy !== old) {
+                            that.bot.msg(that.owner, 'strategy changed to ' + (that.hilo() ? 'hi' : 'lo') + '; weight: ' + weight);
                         }
-                    });
-                    
-                    
-                    var weight = that.stats.map(function(v, i) {
-                        if(v > 504999) {
-                            return v - 504999;
-                        } else if(v < 490000) {
-                            return (490000 - v) * (-1);
-                        } else {
-                            return 0;
-                        }
-                    }).reduce(function(p, c) {
-                        return p + c;
-                    }, 0), old = that.strategy;
-                    
-                    that.weight = weight;
-                    that.strategy = weight > 0; //find the best strategy
-                    
-                    if(that.strategy !== old) {
-                        that.bot.msg(that.owner, 'strategy changed to ' + (that.hilo() ? 'hi' : 'lo') + '; weight: ' + weight);
                     }
                 } else {
                     console.error(err);
