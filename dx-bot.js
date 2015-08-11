@@ -216,7 +216,7 @@
                 }
             } else if(res.win === true) {
                 if(that.jar.gte(that.out)) {
-                    that.bot.msg(owner, 'sending tip jar :)');
+                    that.bot.msg(owner, 'sending tip jar; amount: ' + JustBot._tidy(that.jar));
                     that.bot.tip(owner, that.jar);
                     that.jar = new Big(0);
                 }
