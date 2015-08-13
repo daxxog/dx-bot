@@ -35,7 +35,7 @@
         if(typeof url === 'string') {
             MongoClient.connect(url, function(err, db) {
                 if(!err) {
-                    that.smart = db.collection('smart');
+                    that.smart = db.collection(hash);
                 } else {
                     console.error(err);
                 }
